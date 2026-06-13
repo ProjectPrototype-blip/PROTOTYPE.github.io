@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Grand Regent AI Search</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{width:100%;height:100%;overflow:hidden;}
+  body{
+    font-family:'Segoe UI',system-ui,sans-serif;
+    background:#0a0a0f;
+    color:#e2dff4;
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    padding:12px;
+    gap:10px;
+  }
+
+  #header{
+    text-align:center;
+    padding:6px 0 2px;
+    flex-shrink:0;
+  }
+  #header h1{
+    font-size:1.3rem;
+    font-weight:700;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:#c9b8ff;
+  }
+  #header p{font-size:11px;color:#4a4860;letter-spacing:0.05em;margin-top:3px;}
+
+  #api-row{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex-shrink:0;
+    background:#12111a;
+    border:1px solid #2a2740;
+    border-radius:10px;
+    padding:8px 12px;
+  }
+  #api-row label{font-size:11px;color:#6655aa;white-space:nowrap;letter-spacing:0.04em;text-transform:uppercase;}
+  #api-key{
+    flex:1;
+    background:#0a0a0f;
+    border:1px solid #2a2740;
+    border-radius:6px;
+    color:#c9b8ff;
+    font-family:'Courier New',monospace;
+    font-size:12px;
+    padding:6px 10px;
+  }
+  #api-key:focus{outline:none;border-color:#6655aa;}
+  #api-key::placeholder{color:#3a3850;}
+
+  #chat{
+    flex:1;
+    overflow-y:auto;
+    background:#12111a;
+    border:1px solid #2a2740;
+    border-radius:12px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    scroll-behavior:smooth;
+  }
+
+  .msg{display:flex;flex-direction:column;gap:3px;max-width:84%;}
+  .msg.user{align-self:flex-end;align-items:flex-end;}
+  .msg.ai{align-self:flex-start;align-items:flex-start;}
+  .msg-label{font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:#4a4860;}
+  .msg-bubble{
+    padding:10px 14px;
+    border-radius:12px;
+    font-size:13.5px;
+    line-height:1.65;
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  .msg.user .msg-bubble{background:#2e2060;color:#d4c8ff;border:1px solid #4a3a90;border-bottom-right-radius:3px;}
+  .msg.ai .msg-bubble{background:#1c1b27;color:#e2dff4;border:1px solid #2e2c42;border-bottom-left-radius:3px;}
+
+  .thinking{
+    align-self:flex-start;
+    background:#1a1828;
+    border:1px solid #2e2c42;
+    border-left:3px solid #6655aa;
+    border-radius:8px;
+    padding:10px 14px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    max-width:80%;
+  }
+  .think-step{font-size:12px;color:#7a7890;display:flex;align-items:center;gap:8px;}
+  .loader{border:2px solid #2e2c42;border-top:2px solid #6655aa;border-radius:50%;width:10px;height:10px;animation:spin 0.8s linear infinite;flex-shrink:0;}
+  .done{color:#10b981;font-size:13px;}
+  @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+
+  #input-row{
+    display:flex;
+    gap:8px;
+    align-items:flex-end;
+    flex-shrink:0;
+  }
+  #user-input{
+    flex:1;
+    background:#12111a;
+    border:1px solid #2a2740;
+    border-radius:10px;
+    color:#e2dff4;
+    font-family:inherit;
+    font-size:13.5px;
+    padding:11px 14px;
+    resize:none;
+    min-height:44px;
+    max-height:120px;
+    overflow-y:auto;
+    line-height:1.5;
+  }
+  #user-input:focus{outline:none;border-color:#6655aa;}
+  #user-input::placeholder{color:#3a3850;}
+  #send-btn{
+    background:#3d2d8a;
+    color:#d4c8ff;
+    border:1px solid #5a45b0;
+    border-radius:10px;
+    padding:0 18px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    height:44px;
+    white-space:nowrap;
+    transition:background 0.15s;
+  }
+  #send-btn:hover{background:#4e3aaa;}
+  #send-btn:disabled{opacity:0.35;cursor:not-allowed;}
+
+  ::-webkit-scrollbar{width:4px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:#2e2c42;border-radius:4px;}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>Grand Regent AI</h1>
+  <p>REAL WEB SEARCH &nbsp;·&nbsp; POWERED BY CLAUDE</p>
+</div>
+
+<div id="api-row">
+  <label for="api-key">Anthropic Key</label>
+  <input type="password" id="api-key" placeholder="sk-ant-..." autocomplete="off"/>
+</div>
+
+<div id="chat">
+  <div class="msg ai">
+    <span class="msg-label">Grand Regent AI</span>
+    <div class="msg-bubble">Greetings. Enter your Anthropic API key above, then ask me anything — I'll search the live web to answer you.</div>
+  </div>
+</div>
+
+<div id="input-row">
+  <textarea id="user-input" placeholder="Ask anything..." rows="1"></textarea>
+  <button id="send-btn" onclick="send()">Send</button>
+</div>
+
+<script>
+const history = [];
+
+document.getElementById('user-input').addEventListener('keydown', e => {
+  if(e.key==='Enter' && !e.shiftKey){e.preventDefault();send();}
+});
+document.getElementById('user-input').addEventListener('input', function(){
+  this.style.height='auto';
+  this.style.height=Math.min(this.scrollHeight,120)+'px';
+});
+
+function addMsg(role, text){
+  const chat = document.getElementById('chat');
+  const wrap = document.createElement('div');
+  wrap.className = 'msg '+(role==='user'?'user':'ai');
+  const label = document.createElement('span');
+  label.className = 'msg-label';
+  label.textContent = role==='user'?'You':'Grand Regent AI';
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+  bubble.textContent = text;
+  wrap.appendChild(label);
+  wrap.appendChild(bubble);
+  chat.appendChild(wrap);
+  chat.scrollTop = chat.scrollHeight;
+  return bubble;
+}
+
+function addThinking(){
+  const chat = document.getElementById('chat');
+  const block = document.createElement('div');
+  block.className = 'thinking';
+  block.id = 'thinking-block';
+  chat.appendChild(block);
+  chat.scrollTop = chat.scrollHeight;
+  return block;
+}
+
+function addStep(block, text, done=false){
+  const step = document.createElement('div');
+  step.className = 'think-step';
+  step.innerHTML = done
+    ? `<span class="done">✓</span><span>${text}</span>`
+    : `<div class="loader"></div><span>${text}</span>`;
+  block.appendChild(step);
+  document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+  return step;
+}
+
+async function send(){
+  const input = document.getElementById('user-input');
+  const btn = document.getElementById('send-btn');
+  const apiKey = document.getElementById('api-key').value.trim();
+  const text = input.value.trim();
+
+  if(!text) return;
+
+  if(!apiKey){
+    addMsg('ai','Grand Regent — please enter your Anthropic API key above first.');
+    return;
+  }
+
+  input.value='';
+  input.style.height='auto';
+  input.disabled=true;
+  btn.disabled=true;
+
+  addMsg('user', text);
+  history.push({role:'user', content: text});
+
+  const block = addThinking();
+  const s1 = addStep(block, 'Analyzing your query...');
+  await new Promise(r=>setTimeout(r,600));
+  s1.innerHTML = '<span class="done">✓</span><span>Query understood.</span>';
+
+  const s2 = addStep(block, 'Searching the live web...');
+  await new Promise(r=>setTimeout(r,500));
+  s2.innerHTML = '<span class="done">✓</span><span>Web search activated.</span>';
+
+  const s3 = addStep(block, 'Synthesizing results...');
+
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body: JSON.stringify({
+        model:'claude-opus-4-6',
+        max_tokens:1024,
+        system:`You are Grand Regent AI — a brilliant, all-knowing assistant with live web search. You serve the Grand Regent. Be sharp, direct, and thorough. Always use your web search tool to find current information before answering. Cite sources naturally in your response.`,
+        tools:[{
+          type:'web_search_20250305',
+          name:'web_search'
+        }],
+        messages: history
+      })
+    });
+
+    const data = await res.json();
+
+    if(data.error){
+      block.remove();
+      addMsg('ai','Error: '+data.error.message);
+    } else {
+      const reply = data.content
+        ?.filter(b=>b.type==='text')
+        .map(b=>b.text)
+        .join('') || 'No response received.';
+
+      s3.innerHTML = '<span class="done">✓</span><span>Done.</span>';
+      await new Promise(r=>setTimeout(r,300));
+      block.remove();
+      addMsg('ai', reply);
+      history.push({role:'assistant', content: reply});
+    }
+  } catch(err){
+    block.remove();
+    addMsg('ai','Connection failed. Check your API key and try again, Grand Regent.');
+  }
+
+  input.disabled=false;
+  btn.disabled=false;
+  input.focus();
+}
+</script>
+</body>
+</html>
